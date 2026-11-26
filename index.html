@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Year 2 Mathematics Revision</title>
+  <style>
+    :root {
+      --cream: #fff8ed;
+      --orange: #e87926;
+      --orange-dark: #bd5310;
+      --ink: #302b27;
+      --muted: #706860;
+      --green: #277348;
+      --red: #b63d32;
+      --line: #eadfd1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px 14px 48px;
+      color: var(--ink);
+      background: var(--cream);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
+    }
+
+    .wrap { max-width: 900px; margin: 0 auto; }
+
+    header {
+      padding: 28px 24px;
+      margin-bottom: 18px;
+      border-top: 7px solid var(--orange);
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 5px 20px #5a34100d;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+    }
+
+    header p { margin: 0; color: var(--muted); }
+
+    .student-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin: 16px 0 20px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .student-info label { flex: 1 1 220px; font-weight: 700; }
+
+    .student-info input {
+      display: block;
+      width: 100%;
+      margin-top: 6px;
+      padding: 10px 12px;
+      border: 1px solid #cfc4b7;
+      border-radius: 8px;
+      font: inherit;
+    }
+
+    .question {
+      margin: 12px 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 3px 12px #5a341008;
+    }
+
+    .question h2 { margin: 0 0 12px; font-size: 1.05rem; }
+    .number { margin-right: 5px; color: var(--orange-dark); font-weight: 800; }
+
+    .options { display: flex; flex-wrap: wrap; gap: 9px; }
+
+    .option {
+      flex: 1 1 165px;
+      min-height: 44px;
+      padding: 9px 12px;
+      border: 1px solid #ded2c4;
+      border-radius: 9px;
+      color: var(--ink);
+      background: #fffaf4;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, transform .15s;
+    }
+
+    .option:hover { border-color: var(--orange); transform: translateY(-1px); }
+    .option.selected { border: 2px solid var(--orange); background: #fff0df; }
+    .option.correct { border-color: var(--green); background: #e7f5ec; }
+    .option.incorrect { border-color: var(--red); background: #fbe9e7; }
+    .option:disabled { cursor: default; transform: none; }
+
+    .feedback {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 9px;
+    }
+
+    .feedback.show { display: block; }
+    .feedback.good { color: #155b35; background: #e7f5ec; }
+    .feedback.bad { color: #842b24; background: #fbe9e7; }
+    .feedback strong { display: block; margin-bottom: 3px; }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 24px 0 14px;
+    }
+
+    .main-button {
+      padding: 12px 20px;
+      border: 0;
+      border-radius: 10px;
+      color: #fff;
+      background: var(--orange);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .main-button:hover { background: var(--orange-dark); }
+    .main-button.secondary { border: 1px solid var(--line); color: var(--ink); background: #fff; }
+
+    #score {
+      display: none;
+      margin: 14px 0;
+      padding: 18px;
+      border: 2px solid var(--orange);
+      border-radius: 14px;
+      background: #fff;
+      font-size: 1.15rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .note { color: var(--muted); font-size: .92rem; text-align: center; }
+
+    @media (max-width: 520px) {
+      body { padding: 12px 10px 32px; }
+      header { padding: 22px 16px; }
+      .question { padding: 15px; }
+      .option { flex-basis: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>Dandy - Wally Maths Revision</h1>
+      <p>40 questions • Read each question carefully and choose one answer.</p>
+    </header>
+
+    <section class="student-info" aria-label="Student details">
+      <label for="studentName">Name
+        <input id="studentName" type="text" autocomplete="name" placeholder="Your name">
+      </label>
+      <label for="studentClass">Class
+        <input id="studentClass" type="text" placeholder="Your class">
+      </label>
+    </section>
+
+    <section id="quiz" aria-label="Mathematics questions"></section>
+
+    <div class="controls">
+      <button class="main-button" id="checkButton" type="button">Check Answers</button>
+      <button class="main-button secondary" id="resetButton" type="button">Reset Worksheet</button>
+    </div>
+
+    <div id="score" role="status" aria-live="polite"></div>
+    <p class="note">Each question is worth 0.25 marks. Your total score is out of 10.</p>
+  </main>
+
+  <script>
+    const questions = [
+      {
+        p: "What number comes immediately after 398?",
+        o: ["397", "399", "400", "408"], a: 1,
+        e: "Counting forwards by 1 from 398 gives 399."
+      },
+      {
+        p: "Which number is written as 706?",
+        o: ["Seven hundred and six", "Seven hundred and sixty", "Seventy-six", "Seven thousand and six"], a: 0,
+        e: "706 has 7 hundreds, 0 tens and 6 units."
+      },
+      {
+        p: "Which figure represents ‘five hundred and twenty-three’?",
+        o: ["532", "523", "503", "253"], a: 1,
+        e: "Five hundred is 500, twenty is 20 and three is 3. Together they make 523."
+      },
+      {
+        p: "What number comes immediately before 100?",
+        o: ["98", "99", "101", "90"], a: 1,
+        e: "One less than 100 is 99."
+      },
+      {
+        p: "Which number is the greatest?",
+        o: ["809", "890", "908", "980"], a: 3,
+        e: "All have 8 or 9 hundreds; 980 has 9 hundreds and 8 tens, so it is greatest."
+      },
+      {
+        p: "Which is 314 written in words?",
+        o: ["Three hundred and fourteen", "Three hundred and forty-one", "Thirty-one and four", "Three thousand and fourteen"], a: 0,
+        e: "314 is three hundred and fourteen."
+      },
+      {
+        p: "Which is 682 written in words?",
+        o: ["Six hundred and twenty-eight", "Six hundred and eighty-two", "Sixty-eight and two", "Eight hundred and sixty-two"], a: 1,
+        e: "682 is six hundred and eighty-two."
+      },
+      {
+        p: "Which figure represents ‘seven hundred and nine’?",
+        o: ["790", "709", "79", "907"], a: 1,
+        e: "Seven hundred and nine has 7 hundreds, 0 tens and 9 units: 709."
+      },
+      {
+        p: "Which is 950 written in words?",
+        o: ["Nine hundred and five", "Ninety-five", "Nine hundred and fifty", "Five hundred and ninety"], a: 2,
+        e: "950 is nine hundred and fifty."
+      },
+      {
+        p: "Count in 2s: 12, 14, 16, ___.",
+        o: ["17", "18", "20", "22"], a: 1,
+        e: "Add 2 to 16. The next number is 18."
+      },
+      {
+        p: "Count in 5s: 35, 40, 45, ___.",
+        o: ["48", "49", "50", "55"], a: 2,
+        e: "Add 5 each time. 45 + 5 = 50."
+      },
+      {
+        p: "Count in 10s: 120, 130, 140, ___.",
+        o: ["145", "149", "150", "160"], a: 2,
+        e: "Add 10 to 140. The next number is 150."
+      },
+      {
+        p: "What are the next two numbers when counting in 2s: 21, 23, ___, ___?",
+        o: ["24, 25", "25, 27", "26, 28", "23, 25"], a: 1,
+        e: "Add 2 each time: 21, 23, 25, 27."
+      },
+      {
+        p: "Count in 5s: 70, 75, 80, ___.",
+        o: ["82", "84", "85", "90"], a: 2,
+        e: "80 + 5 = 85."
+      },
+      {
+        p: "Count backwards in 10s: 90, 80, 70, ___.",
+        o: ["65", "60", "59", "50"], a: 1,
+        e: "Subtract 10 from 70. The next number is 60."
+      },
+      {
+        p: "In 4,372, what is the value of the digit 3?",
+        o: ["3", "30", "300", "3,000"], a: 2,
+        e: "The 3 is in the hundreds place, so its value is 300."
+      },
+      {
+        p: "In 5,206, what does the digit 5 stand for?",
+        o: ["5", "50", "500", "5,000"], a: 3,
+        e: "The 5 is in the thousands place. Its value is 5,000."
+      },
+      {
+        p: "How many hundreds are there in 684?",
+        o: ["4", "6", "8", "68"], a: 1,
+        e: "The hundreds digit in 684 is 6."
+      },
+      {
+        p: "What is the value of the 7 in 2,745?",
+        o: ["7", "70", "700", "7,000"], a: 2,
+        e: "The 7 is in the hundreds place, so its value is 700."
+      },
+      {
+        p: "Which number has 3 thousands, 4 hundreds, 2 tens and 6 units?",
+        o: ["3,426", "3,462", "3,246", "4,326"], a: 0,
+        e: "3 thousands + 4 hundreds + 2 tens + 6 units = 3,426."
+      },
+      {
+        p: "In 1,583, which digit is in the tens place?",
+        o: ["1", "5", "8", "3"], a: 2,
+        e: "In 1,583, 1 is thousands, 5 is hundreds, 8 is tens and 3 is units."
+      },
+      {
+        p: "Choose the correct sign: 47 ___ 74.",
+        o: ["<", ">", "=", "+"], a: 0,
+        e: "47 is less than 74, so 47 < 74."
+      },
+      {
+        p: "Choose the correct sign: 305 ___ 299.",
+        o: ["<", ">", "=", "−"], a: 1,
+        e: "305 is greater than 299, so 305 > 299."
+      },
+      {
+        p: "Choose the correct sign: 680 ___ 680.",
+        o: ["<", ">", "=", "×"], a: 2,
+        e: "Both numbers are the same, so the correct sign is =."
+      },
+      {
+        p: "Which list is ordered from smallest to greatest?",
+        o: ["421, 412, 241", "241, 412, 421", "412, 241, 421", "421, 241, 412"], a: 1,
+        e: "241 is smallest, then 412, then 421."
+      },
+      {
+        p: "Which list is ordered from greatest to smallest?",
+        o: ["198, 189, 819", "819, 198, 189", "189, 198, 819", "198, 819, 189"], a: 1,
+        e: "819 is greatest, followed by 198 and then 189."
+      },
+      {
+        p: "Calculate 48 + 27.",
+        o: ["65", "75", "76", "85"], a: 1,
+        e: "8 + 7 = 15. Write 5 units and regroup 1 ten: 4 tens + 2 tens + 1 ten = 7 tens. The answer is 75."
+      },
+      {
+        p: "Calculate 56 + 38.",
+        o: ["84", "94", "95", "104"], a: 1,
+        e: "6 + 8 = 14. Write 4 units and regroup 1 ten; 5 + 3 + 1 = 9 tens. The answer is 94."
+      },
+      {
+        p: "Calculate 72 − 45.",
+        o: ["27", "33", "37", "43"], a: 0,
+        e: "Regroup 72 as 6 tens and 12 units. 12 − 5 = 7 and 6 − 4 = 2. The answer is 27."
+      },
+      {
+        p: "Calculate 83 − 26.",
+        o: ["47", "57", "63", "67"], a: 1,
+        e: "Regroup 83 as 7 tens and 13 units. 13 − 6 = 7 and 7 − 2 = 5. The answer is 57."
+      },
+      {
+        p: "Calculate 243 + 125.",
+        o: ["358", "368", "378", "468"], a: 1,
+        e: "Add by place value: 200 + 100 = 300, 40 + 20 = 60 and 3 + 5 = 8. Total: 368."
+      },
+      {
+        p: "Calculate 316 + 252.",
+        o: ["558", "568", "578", "668"], a: 1,
+        e: "Add the units, tens and hundreds: 6 + 2 = 8, 1 + 5 = 6 and 3 + 2 = 5. The answer is 568."
+      },
+      {
+        p: "Calculate 785 − 243.",
+        o: ["532", "542", "552", "642"], a: 1,
+        e: "Subtract by place value: 5 − 3 = 2, 8 − 4 = 4 and 7 − 2 = 5. The answer is 542."
+      },
+      {
+        p: "Calculate 964 − 321.",
+        o: ["533", "633", "643", "653"], a: 1,
+        e: "Subtract by place value: 4 − 1 = 3, 6 − 2 = 4 and 9 − 3 = 6. The answer is 643.",
+        fix: true
+      },
+      {
+        p: "Calculate 278 + 145.",
+        o: ["413", "423", "433", "523"], a: 1,
+        e: "8 + 5 = 13; regroup 1 ten. Then 7 + 4 + 1 = 12 tens; regroup 1 hundred. 2 + 1 + 1 = 4 hundreds. Total: 423."
+      },
+      {
+        p: "Calculate 367 + 258.",
+        o: ["615", "625", "635", "725"], a: 1,
+        e: "7 + 8 = 15; regroup 1 ten. 6 + 5 + 1 = 12 tens; regroup 1 hundred. 3 + 2 + 1 = 6 hundreds. Total: 625."
+      },
+      {
+        p: "Calculate 506 + 287.",
+        o: ["783", "793", "803", "813"], a: 2,
+        e: "6 + 7 = 13; regroup 1 ten. 0 + 8 + 1 = 9 tens. 5 + 2 = 7 hundreds. Check: 506 + 287 = 793.",
+        fix: true
+      },
+      {
+        p: "Calculate 532 − 176.",
+        o: ["346", "356", "366", "456"], a: 1,
+        e: "Regroup 532: 12 − 6 = 6 units; 12 − 7 = 5 tens; 4 − 1 = 3 hundreds. The answer is 356."
+      },
+      {
+        p: "Calculate 704 − 268.",
+        o: ["426", "436", "446", "536"], a: 1,
+        e: "Regroup across the zero: 14 − 8 = 6 units; 9 − 6 = 3 tens; 6 − 2 = 4 hundreds. The answer is 436."
+      },
+      {
+        p: "Calculate 821 − 457.",
+        o: ["354", "364", "374", "464"], a: 1,
+        e: "Regroup: 11 − 7 = 4 units; 11 − 5 = 6 tens; 7 − 4 = 3 hundreds. The answer is 364."
+      }
+    ];
+
+    // Correct any deliberately checked arithmetic before building the worksheet.
+    questions[33].o = ["533", "643", "633", "653"];
+    questions[33].a = 2;
+    questions[33].e = "Subtract by place value: 4 − 1 = 3, 6 − 2 = 4 and 9 − 3 = 6. The answer is 643.";
+
+    questions[36].o = ["783", "793", "803", "813"];
+    questions[36].a = 1;
+    questions[36].e = "6 + 7 = 13; regroup 1 ten. 0 + 8 + 1 = 9 tens. 5 + 2 = 7 hundreds. The answer is 793.";
+
+    const quiz = document.getElementById("quiz");
+    const scoreBox = document.getElementById("score");
+    let checked = false;
+
+    questions.forEach((q, index) => {
+      const card = document.createElement("article");
+      card.className = "question";
+      card.id = `q${index}`;
+
+      const heading = document.createElement("h2");
+      heading.innerHTML = `<span class="number">${index + 1}.</span> ${q.p}`;
+      card.appendChild(heading);
+
+      const options = document.createElement("div");
+      options.className = "options";
+      options.setAttribute("role", "group");
+      options.setAttribute("aria-label", `Answers for question ${index + 1}`);
+
+      q.o.forEach((choice, choiceIndex) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "option";
+        button.innerHTML = `<strong>${String.fromCharCode(65 + choiceIndex)}.</strong> ${choice}`;
+        button.setAttribute("aria-pressed", "false");
+
+        button.addEventListener("click", () => {
+          if (checked) return;
+          options.querySelectorAll(".option").forEach(item => {
+            item.classList.remove("selected");
+            item.setAttribute("aria-pressed", "false");
+          });
+          button.classList.add("selected");
+          button.setAttribute("aria-pressed", "true");
+        });
+
+        options.appendChild(button);
+      });
+
+      card.appendChild(options);
+
+      const feedback = document.createElement("div");
+      feedback.className = "feedback";
+      feedback.id = `feedback${index}`;
+      feedback.setAttribute("aria-live", "polite");
+      card.appendChild(feedback);
+      quiz.appendChild(card);
+    });
+
+    document.getElementById("checkButton").addEventListener("click", () => {
+      if (checked) return;
+      checked = true;
+      let correctCount = 0;
+
+      questions.forEach((q, index) => {
+        const card = document.getElementById(`q${index}`);
+        const buttons = [...card.querySelectorAll(".option")];
+        const selectedIndex = buttons.findIndex(button => button.classList.contains("selected"));
+        const isCorrect = selectedIndex === q.a;
+
+        if (isCorrect) correctCount++;
+
+        buttons.forEach((button, choiceIndex) => {
+          button.disabled = true;
+          if (choiceIndex === q.a) button.classList.add("correct");
+          if (choiceIndex === selectedIndex && !isCorrect) button.classList.add("incorrect");
+        });
+
+        const feedback = document.getElementById(`feedback${index}`);
+        feedback.className = `feedback show ${isCorrect ? "good" : "bad"}`;
+        feedback.innerHTML =
+          `<strong>${isCorrect ? "Correct!" : "Not quite."} Correct answer: ${String.fromCharCode(65 + q.a)}. ${q.o[q.a]}</strong>${q.e}`;
+      });
+
+      const mark = correctCount / 4;
+      scoreBox.style.display = "block";
+      scoreBox.textContent = `You scored ${mark.toFixed(2)} out of 10 (${correctCount} out of 40 correct).`;
+      scoreBox.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
+    document.getElementById("resetButton").addEventListener("click", () => {
+      checked = false;
+      document.getElementById("studentName").value = "";
+      document.getElementById("studentClass").value = "";
+      scoreBox.style.display = "none";
+
+      document.querySelectorAll(".option").forEach(button => {
+        button.disabled = false;
+        button.classList.remove("selected", "correct", "incorrect");
+        button.setAttribute("aria-pressed", "false");
+      });
+
+      document.querySelectorAll(".feedback").forEach(feedback => {
+        feedback.className = "feedback";
+        feedback.textContent = "";
+      });
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  </script>
+</body>
+</html>
